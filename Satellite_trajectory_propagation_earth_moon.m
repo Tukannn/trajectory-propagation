@@ -6,7 +6,7 @@ R_earth = 6371e3; % Radius of Earth in m
 R_moon = 1737e3; % Radius of Moon in m
 d = 384400e3; % Distance between Earth and Moon in m
 delay = 0.1; % Delay between frames in seconds
-nframes = 100; % Number of frames to generate
+nframes = 200; % Number of frames to generate
 filename = 'live_plot.gif'; % Name of the GIF file
 
 % Initial conditions
@@ -56,8 +56,11 @@ dist = sqrt((y(:,3)-y(:,7)).^2 + (y(:,4)-y(:,8)).^2);
 closest_approach_time = datestr(t(idx)/86400, 'HH:MM:SS');
 
 % Display the closest approach and annotations
-text(0, 0, ['Closest approach: ', num2str(min_dist/1e3), ' km at t = ', closest_approach_time])
-text(0,-0.2e8,'Earth')
+text(-2.8e8, 1e8, ['Closest approach: ', num2str(min_dist/1e3), ' km at t = ', closest_approach_time])
+text(0,-0.3e8,'Earth')
+
+%Create the file and write the header
+imwrite(im, map, filename, 'gif', 'Loopcount', inf, 'DelayTime', delay);
 
 % Update the plot in real time
 for k = 2:length(t)
@@ -65,22 +68,19 @@ for k = 2:length(t)
     set(satellite, 'XData', y(k,1), 'YData', y(k,2));
     set(h_moon, 'XData', y(1:k,5), 'YData', y(1:k,6));
     set(moon, 'XData', y(k,5), 'YData', y(k,6));
-    drawnow;
-
-    if mod(k, 5000) == 0
+    
+    % Select only every 100th frame of simulation
+    if mod(k, 100) == 0
+        
         % Capture the frame
         frame = getframe(gcf);
 
         % Convert the frame to an indexed image
         [im, map] = rgb2ind(frame.cdata, 256, 'nodither');
 
-        % Write the frame to the GIF file
-        if k == 2
-            % For the first frame, create the file and write the header
-            imwrite(im, map, filename, 'gif', 'Loopcount', inf, 'DelayTime', delay);
-        else
-            % For the subsequent frames, append to the file
-            imwrite(im, map, filename, 'gif', 'WriteMode', 'append', 'DelayTime', delay);
-        end
+        % For the subsequent frames, append to the file
+        imwrite(im, map, filename, 'gif', 'WriteMode', 'append', 'DelayTime', delay);
+   
     end
+   
 end
